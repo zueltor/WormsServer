@@ -8,36 +8,27 @@ namespace WormsServer.Behaviors
 {
     public class BehaviorSmart : IBehavior
     {
-        private int totalSteps = 100;
-        private int maxLifeforceWithoutKids = 60;
-        private int stepsToReduceReproducing = 30;
-        //public static Dictionary<IWorm, Position> wormFoodDictionary = new();
-        public static int currentRun = -1;
-        public static Dictionary<int, int> RunStepDictionary = new();
-        public static Dictionary<int, Dictionary<IWorm, Position>> wormFoodDictionary2 = new();
-        public static List<int> runs=new();
-        //public static List<int>
+        private const int TOTAL_STEPS = 100;
+        private const int MAX_LIFEFORCE_WITHOUT_KIDS = 60;
+        private const int STEPS_TO_REDUCE_REPRODUCING = 30;
+        private readonly Dictionary<int, int> runStepDictionary = new();
+        private readonly Dictionary<int, Dictionary<IWorm, Position>> wormsTargetPosition = new();
 
         public IResponse DoSomething(IWorld world, IWorm worm, int currentStep = 0, int run = 0)
         {
-            if (RunStepDictionary.ContainsKey(run))
-            {
-                if (currentStep < RunStepDictionary[run])
-                {
-                    wormFoodDictionary2[run].Clear();
-                }
-            }
-            RunStepDictionary[run] = currentStep;
-
-            // if (currentRun != run)
+            // if (RunStepDictionary.ContainsKey(run))
             // {
-            //     wormFoodDictionary.Clear();
-            //     currentRun = 0;
+            //     if (currentStep < RunStepDictionary[run])
+            //     {
+            //         wormFoodDictionary2[run].Clear();
+            //     }
             // }
+            // RunStepDictionary[run] = currentStep;
 
-            // if (currentStep == 99)
+            var foods = world.Foods.ToList();
+            // if (wormFoodDictionary2.ContainsKey(run)&&wormFoodDictionary2[run].ContainsKey(worm))
             // {
-            //     Console.WriteLine();
+            //     wormFoodDictionary2[run].Remove(worm);
             // }
 
             var foods = world.Foods.ToList();
@@ -47,15 +38,15 @@ namespace WormsServer.Behaviors
             }
 
             Position foodPosition;
-            int distance;
             while (true)
             {
                 foodPosition = FindClosestFoodPosition(foods, worm);
+
                 var food = foods.FirstOrDefault(f => f.FoodPosition.Equals(foodPosition));
                 if (food is not null)
                 {
                     foods.Remove(food);
-                    distance = foodPosition.Distance(worm.WormPosition);
+                    int distance = foodPosition.Distance(worm.WormPosition);
                     if (food.Lifeforce < distance ||
                         worm.Lifeforce < distance)
                     {
@@ -63,32 +54,28 @@ namespace WormsServer.Behaviors
                     }
                 }
 
-                if (foodPosition.Equals(Position.InvalidPosition()) || !wormFoodDictionary2.ContainsKey(run)||
-                    !wormFoodDictionary2[run].ContainsValue(foodPosition))
-                {
                     break;
                 }
             }
 
             if (foodPosition.Equals(Position.InvalidPosition()))
             {
-                //foodPosition = new Position(0, 0);
                 foodPosition = FindEmptiestZoneDirection(world);
             }
             else
             {
-                if (!wormFoodDictionary2.ContainsKey(run))
-                {
-                    wormFoodDictionary2[run] = new();
-                }
-                
-                wormFoodDictionary2[run][worm] = foodPosition;
+                // if (!wormFoodDictionary2.ContainsKey(run))
+                // {
+                //     wormFoodDictionary2[run] = new();
+                // }
+                //
+                // wormFoodDictionary2[run][worm] = foodPosition;
             }
 
 
             var moveStep = GetMoveStep(foodPosition, worm);
             //distance = foodPosition.Distance(worm.WormPosition);
-            var stepsLeft = totalSteps - currentStep-2;
+            var stepsLeft = TOTAL_STEPS - currentStep - 2;
             var newPosition = new Position(moveStep.X + worm.WormPosition.X, moveStep.Y + worm.WormPosition.Y);
             //stepsLeft = stepsLeft > 0 ? stepsLeft : 1;
             if (IsBlockedByWorm(world, newPosition))
@@ -97,22 +84,24 @@ namespace WormsServer.Behaviors
                 newPosition = new Position(moveStep.X + worm.WormPosition.X, moveStep.Y + worm.WormPosition.Y);
             }
 
-            if (currentStep < stepsToReduceReproducing && worm.Lifeforce > IWorm.LIFEFORCE_TO_REPRODUCE+8 ||
-                currentStep >= stepsToReduceReproducing && worm.Lifeforce > maxLifeforceWithoutKids ||
+            if (currentStep < STEPS_TO_REDUCE_REPRODUCING && worm.Lifeforce > IWorm.LIFEFORCE_TO_REPRODUCE + 8 ||
+                currentStep >= STEPS_TO_REDUCE_REPRODUCING && worm.Lifeforce > MAX_LIFEFORCE_WITHOUT_KIDS ||
                 worm.Lifeforce / IWorm.LIFEFORCE_TO_REPRODUCE > stepsLeft)
             {
-                if (!moveStep.IsNothing()) //not blocked by worms
+                if (moveStep.IsNothing())
                 {
-                    // if (world.Worms.Count > 9&& worm.Lifeforce / Worm.LIFEFORCE_TO_REPRODUCE <= stepsLeft)
-                    // {
-                    //     return new ResponseMove(moveStep);
-                    // }
+                    return new ResponseNothing();
+                }
+                // if (world.Worms.Count > 9&& worm.Lifeforce / IWorm.LIFEFORCE_TO_REPRODUCE <= stepsLeft)
+                // {
+                //     return new ResponseMove(moveStep);
+                // }
 
                     if (worm.Lifeforce <= IWorm.LIFEFORCE_TO_REPRODUCE)
                     {
                         return new ResponseMove(moveStep);
                     }
-                    wormFoodDictionary2[run].Remove(worm);
+                   // wormFoodDictionary2[run].Remove(worm);
                     if (IsBlockedByFood(world, newPosition))
                     {
                         if (worm.Lifeforce / IWorm.LIFEFORCE_TO_REPRODUCE > stepsLeft)
@@ -124,13 +113,7 @@ namespace WormsServer.Behaviors
                             }
                         }
 
-                        return new ResponseMove(moveStep); //cant reproduce because of food
-                    }
-
-                    return new ResponseReproduce(moveStep); //can reproduce here
-                }
-
-                return new ResponseNothing();
+                return new ResponseMove(moveStep); //cant reproduce because of food
 
                 // moveStep = FindAvailableStep(world, worm.WormPosition);
                 // if (moveStep.IsNothing())
