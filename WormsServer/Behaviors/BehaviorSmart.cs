@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using WorldOfWorms.Behaviors;
@@ -11,33 +12,31 @@ namespace WormsServer.Behaviors
         private const int TOTAL_STEPS = 100;
         private const int MAX_LIFEFORCE_WITHOUT_KIDS = 60;
         private const int STEPS_TO_REDUCE_REPRODUCING = 30;
-        private readonly Dictionary<int, int> runStepDictionary = new();
-        private readonly Dictionary<int, Dictionary<IWorm, Position>> wormsTargetPosition = new();
+        private readonly ConcurrentDictionary<int, int> runStepDictionary = new();
+        private readonly ConcurrentDictionary<int, ConcurrentDictionary<IWorm, Position>> wormsTargetPosition = new();
 
         public IResponse DoSomething(IWorld world, IWorm worm, int currentStep = 0, int run = 0)
         {
-            // if (RunStepDictionary.ContainsKey(run))
-            // {
-            //     if (currentStep < RunStepDictionary[run])
-            //     {
-            //         wormFoodDictionary2[run].Clear();
-            //     }
-            // }
-            // RunStepDictionary[run] = currentStep;
-
-            var foods = world.Foods.ToList();
-            // if (wormFoodDictionary2.ContainsKey(run)&&wormFoodDictionary2[run].ContainsKey(worm))
-            // {
-            //     wormFoodDictionary2[run].Remove(worm);
-            // }
-
-            var foods = world.Foods.ToList();
-            if (wormFoodDictionary2.ContainsKey(run)&&wormFoodDictionary2[run].ContainsKey(worm))
+            if (runStepDictionary.ContainsKey(run))
             {
-                wormFoodDictionary2[run].Remove(worm);
+                if (currentStep < runStepDictionary[run])
+                {
+                    wormsTargetPosition[run].Clear();
+                }
             }
 
+            if (!wormsTargetPosition.ContainsKey(run))
+            {
+                wormsTargetPosition[run] = new ConcurrentDictionary<IWorm, Position>();
+            }
+
+            runStepDictionary[run] = currentStep;
+
+
+            wormsTargetPosition[run].Remove(worm, out _);
+
             Position foodPosition;
+            var foods = world.Foods.ToList();
             while (true)
             {
                 foodPosition = FindClosestFoodPosition(foods, worm);
@@ -46,7 +45,7 @@ namespace WormsServer.Behaviors
                 if (food is not null)
                 {
                     foods.Remove(food);
-                    int distance = foodPosition.Distance(worm.WormPosition);
+                    var distance = foodPosition.Distance(worm.WormPosition);
                     if (food.Lifeforce < distance ||
                         worm.Lifeforce < distance)
                     {
@@ -54,6 +53,9 @@ namespace WormsServer.Behaviors
                     }
                 }
 
+                if (foodPosition.Equals(Position.InvalidPosition()) ||
+                    !wormsTargetPosition[run].Values.Contains(foodPosition))
+                {
                     break;
                 }
             }
@@ -64,20 +66,13 @@ namespace WormsServer.Behaviors
             }
             else
             {
-                // if (!wormFoodDictionary2.ContainsKey(run))
-                // {
-                //     wormFoodDictionary2[run] = new();
-                // }
-                //
-                // wormFoodDictionary2[run][worm] = foodPosition;
+                wormsTargetPosition[run][worm] = foodPosition;
             }
 
 
             var moveStep = GetMoveStep(foodPosition, worm);
-            //distance = foodPosition.Distance(worm.WormPosition);
             var stepsLeft = TOTAL_STEPS - currentStep - 2;
             var newPosition = new Position(moveStep.X + worm.WormPosition.X, moveStep.Y + worm.WormPosition.Y);
-            //stepsLeft = stepsLeft > 0 ? stepsLeft : 1;
             if (IsBlockedByWorm(world, newPosition))
             {
                 moveStep = FindAvailableStep(world, worm.WormPosition);
@@ -92,36 +87,30 @@ namespace WormsServer.Behaviors
                 {
                     return new ResponseNothing();
                 }
-                // if (world.Worms.Count > 9&& worm.Lifeforce / IWorm.LIFEFORCE_TO_REPRODUCE <= stepsLeft)
-                // {
-                //     return new ResponseMove(moveStep);
-                // }
 
-                    if (worm.Lifeforce <= IWorm.LIFEFORCE_TO_REPRODUCE)
-                    {
-                        return new ResponseMove(moveStep);
-                    }
-                   // wormFoodDictionary2[run].Remove(worm);
-                    if (IsBlockedByFood(world, newPosition))
-                    {
-                        if (worm.Lifeforce / IWorm.LIFEFORCE_TO_REPRODUCE > stepsLeft)
-                        {
-                            var freeStep = FindCleanStep(world, worm.WormPosition);
-                            if (!freeStep.IsNothing())
-                            {
-                                return new ResponseReproduce(freeStep);
-                            }
-                        }
+                if (worm.Lifeforce <= IWorm.LIFEFORCE_TO_REPRODUCE)
+                {
+                    return new ResponseMove(moveStep);
+                }
 
-                return new ResponseMove(moveStep); //cant reproduce because of food
+                wormsTargetPosition[run].TryRemove(worm, out _);
+                if (!IsBlockedByFood(world, newPosition))
+                {
+                    return new ResponseReproduce(moveStep); //can reproduce here
+                }
 
-                // moveStep = FindAvailableStep(world, worm.WormPosition);
-                // if (moveStep.IsNothing())
-                // {
-                //     return new ResponseNothing();
-                // }
-                //
-                // return new ResponseReproduce(moveStep);
+                if (worm.Lifeforce / IWorm.LIFEFORCE_TO_REPRODUCE <= stepsLeft)
+                {
+                    return new ResponseMove(moveStep);
+                }
+
+                var freeStep = FindCleanStep(world, worm.WormPosition);
+                if (!freeStep.IsNothing())
+                {
+                    return new ResponseReproduce(freeStep);
+                }
+
+                return new ResponseMove(moveStep);
             }
 
             if (moveStep.IsNothing())
