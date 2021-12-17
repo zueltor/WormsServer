@@ -14,23 +14,11 @@ namespace WormsServer.Controllers
             this.wormBehavior = wormBehavior;
         }
 
-        [Route("/get")]
+        [Route("/")]
         [HttpGet]
         public IActionResult GetAction()
         {
-            // BehaviorSmart b=wormBehavior as BehaviorSmart;
-           //  List<Dictionary<string, string>> kekw = new();
-             // foreach (var triplet in b.wormsTargetPosition)
-             // {
-             //     Dictionary<string, string> kek = new();
-             //     foreach (var pair in triplet.Value)
-             //     {
-             //         kek[$"{pair.Key.Name}-{pair.Key.Lifeforce}-{pair.Key.WormPosition}"] = pair.Value.ToString();
-             //     }
-             //     kekw.Add(kek);
-             //     
-             // }
-            return new JsonResult(new { Version="1.16"});
+            return new JsonResult(new { Worms_Version="1.17"});
         }
 
         [Route("/{name}/getAction/{step?}/{run?}")]
@@ -42,9 +30,7 @@ namespace WormsServer.Controllers
             {
                 return BadRequest("No such worm");
             }
-            //Console.WriteLine("Parsing");
             var action = IBehavior.ParseResponse(wormBehavior.DoSomething(world, currentWorm, step, run));
-            //Console.WriteLine($"{currentWorm.Name} Direction: {action.Direction},Split: {action.Split}");
             return new JsonResult(new
                 WormAction { Direction = action.Direction, Split = action.Split });
         }
