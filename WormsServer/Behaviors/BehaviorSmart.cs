@@ -14,37 +14,26 @@ namespace WormsServer.Behaviors
         //public static Dictionary<IWorm, Position> wormFoodDictionary = new();
         public static int currentRun = -1;
         public static Dictionary<int, int> RunStepDictionary = new();
-        public static Dictionary<int, Dictionary<IWorm, Position>> wormFoodDictionary2 = new();
+        //public static Dictionary<int, Dictionary<IWorm, Position>> wormFoodDictionary2 = new();
         public static List<int> runs=new();
         //public static List<int>
 
         public IResponse DoSomething(IWorld world, IWorm worm, int currentStep = 0, int run = 0)
         {
-            if (RunStepDictionary.ContainsKey(run))
-            {
-                if (currentStep < RunStepDictionary[run])
-                {
-                    wormFoodDictionary2[run].Clear();
-                }
-            }
-            RunStepDictionary[run] = currentStep;
-
-            // if (currentRun != run)
+            // if (RunStepDictionary.ContainsKey(run))
             // {
-            //     wormFoodDictionary.Clear();
-            //     currentRun = 0;
+            //     if (currentStep < RunStepDictionary[run])
+            //     {
+            //         wormFoodDictionary2[run].Clear();
+            //     }
             // }
-
-            // if (currentStep == 99)
-            // {
-            //     Console.WriteLine();
-            // }
+            // RunStepDictionary[run] = currentStep;
 
             var foods = world.Foods.ToList();
-            if (wormFoodDictionary2.ContainsKey(run)&&wormFoodDictionary2[run].ContainsKey(worm))
-            {
-                wormFoodDictionary2[run].Remove(worm);
-            }
+            // if (wormFoodDictionary2.ContainsKey(run)&&wormFoodDictionary2[run].ContainsKey(worm))
+            // {
+            //     wormFoodDictionary2[run].Remove(worm);
+            // }
 
             Position foodPosition;
             int distance;
@@ -61,13 +50,15 @@ namespace WormsServer.Behaviors
                     {
                         continue;
                     }
-                }
 
-                if (foodPosition.Equals(Position.InvalidPosition()) || !wormFoodDictionary2.ContainsKey(run)||
-                    !wormFoodDictionary2[run].ContainsValue(foodPosition))
-                {
                     break;
                 }
+
+                // if (foodPosition.Equals(Position.InvalidPosition()) || !wormFoodDictionary2.ContainsKey(run)||
+                //     !wormFoodDictionary2[run].ContainsValue(foodPosition))
+                // {
+                //     break;
+                // }
             }
 
             if (foodPosition.Equals(Position.InvalidPosition()))
@@ -77,12 +68,12 @@ namespace WormsServer.Behaviors
             }
             else
             {
-                if (!wormFoodDictionary2.ContainsKey(run))
-                {
-                    wormFoodDictionary2[run] = new();
-                }
-                
-                wormFoodDictionary2[run][worm] = foodPosition;
+                // if (!wormFoodDictionary2.ContainsKey(run))
+                // {
+                //     wormFoodDictionary2[run] = new();
+                // }
+                //
+                // wormFoodDictionary2[run][worm] = foodPosition;
             }
 
 
@@ -112,7 +103,7 @@ namespace WormsServer.Behaviors
                     {
                         return new ResponseMove(moveStep);
                     }
-                    wormFoodDictionary2[run].Remove(worm);
+                   // wormFoodDictionary2[run].Remove(worm);
                     if (IsBlockedByFood(world, newPosition))
                     {
                         if (worm.Lifeforce / IWorm.LIFEFORCE_TO_REPRODUCE > stepsLeft)

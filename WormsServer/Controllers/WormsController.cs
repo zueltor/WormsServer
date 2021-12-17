@@ -22,18 +22,18 @@ namespace WormsServer.Controllers
         {
             //var beh = wormBehavior as BehaviorSmart;
            
-            List<Dictionary<string, string>> kekw = new();
-            foreach (var triplet in BehaviorSmart.wormFoodDictionary2)
-            {
-                Dictionary<string, string> kek = new();
-                foreach (var pair in triplet.Value)
-                {
-                    kek[$"{pair.Key.Name}-{pair.Key.Lifeforce}-{pair.Key.WormPosition}"] = pair.Value.ToString();
-                }
-                kekw.Add(kek);
-                
-            }
-            return new JsonResult(new { Version="1.13",Map=kekw});
+            //List<Dictionary<string, string>> kekw = new();
+            // foreach (var triplet in BehaviorSmart.wormFoodDictionary2)
+            // {
+            //     Dictionary<string, string> kek = new();
+            //     foreach (var pair in triplet.Value)
+            //     {
+            //         kek[$"{pair.Key.Name}-{pair.Key.Lifeforce}-{pair.Key.WormPosition}"] = pair.Value.ToString();
+            //     }
+            //     kekw.Add(kek);
+            //     
+            // }
+            return new JsonResult(new { Version="1.14"});
             //return new JsonResult("V 1.6");
         }
 
