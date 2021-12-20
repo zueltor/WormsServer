@@ -10,8 +10,9 @@ namespace WormsServer.Behaviors
     public class BehaviorSmart : IBehavior
     {
         private const int TOTAL_STEPS = 100;
-        private const int MAX_LIFEFORCE_WITHOUT_KIDS = 60;
-        private const int STEPS_TO_REDUCE_REPRODUCING = 30;
+        private const int MAX_LIFEFORCE_WITHOUT_KIDS = 92;
+        private const int STEPS_TO_REDUCE_REPRODUCING = 29;
+        private const int MIN_LIFEFORCE_WITHOUT_KIDS = 22;
         private readonly ConcurrentDictionary<int, int> runStepDictionary = new();
         private readonly ConcurrentDictionary<int, ConcurrentDictionary<IWorm, Position>> wormsTargetPosition = new();
 
@@ -79,7 +80,7 @@ namespace WormsServer.Behaviors
                 newPosition = new Position(moveStep.X + worm.WormPosition.X, moveStep.Y + worm.WormPosition.Y);
             }
 
-            if (currentStep < STEPS_TO_REDUCE_REPRODUCING && worm.Lifeforce > IWorm.LIFEFORCE_TO_REPRODUCE + 8 ||
+            if (currentStep < STEPS_TO_REDUCE_REPRODUCING && worm.Lifeforce > MIN_LIFEFORCE_WITHOUT_KIDS ||
                 currentStep >= STEPS_TO_REDUCE_REPRODUCING && worm.Lifeforce > MAX_LIFEFORCE_WITHOUT_KIDS ||
                 worm.Lifeforce / IWorm.LIFEFORCE_TO_REPRODUCE > stepsLeft)
             {
