@@ -18,7 +18,7 @@ namespace WormsServer.Controllers
         [HttpGet]
         public IActionResult GetAction()
         {
-            return new JsonResult(new { Worms_Version="1.19"});
+            return new JsonResult(new { Worms_Version="1.20"});
         }
 
         [Route("/{name}/getAction/{step?}/{run?}")]

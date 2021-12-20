@@ -10,7 +10,7 @@ namespace WormsServer.Behaviors
     public class BehaviorSmart : IBehavior
     {
         private const int TOTAL_STEPS = 100;
-        private const int MAX_LIFEFORCE_WITHOUT_KIDS = 92;
+        private const int MAX_LIFEFORCE_WITHOUT_KIDS = 150;
         private const int MIN_WORM_COUNT = 4;
         private const int MIN_LIFEFORCE_WITHOUT_KIDS = 20;
         private readonly ConcurrentDictionary<int, int> runStepDictionary = new();
