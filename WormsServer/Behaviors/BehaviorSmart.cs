@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using WorldOfWorms.Behaviors;
 using WormsServer.Responses;
 
 namespace WormsServer.Behaviors
@@ -10,9 +9,9 @@ namespace WormsServer.Behaviors
     public class BehaviorSmart : IBehavior
     {
         private const int TOTAL_STEPS = 100;
-        private const int MAX_LIFEFORCE_WITHOUT_KIDS = 150;
+        private const int MAX_LIFEFORCE_WITHOUT_KIDS = 160;
         private const int MIN_WORM_COUNT = 4;
-        private const int MIN_LIFEFORCE_WITHOUT_KIDS = 20;
+        private const int MIN_LIFEFORCE_WITHOUT_KIDS = 19;
         private readonly ConcurrentDictionary<int, int> runStepDictionary = new();
         private readonly ConcurrentDictionary<int, ConcurrentDictionary<IWorm, Position>> wormsTargetPosition = new();
 

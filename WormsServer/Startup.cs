@@ -4,7 +4,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using WorldOfWorms.Behaviors;
 using WormsServer.Behaviors;
 
 namespace WormsServer
@@ -22,7 +21,6 @@ namespace WormsServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<IBehavior, BehaviorSmart>();
-            //services.AddSingleton<IBehavior, BehaviorEatFood>();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
