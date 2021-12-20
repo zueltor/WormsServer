@@ -11,8 +11,8 @@ namespace WormsServer.Behaviors
     {
         private const int TOTAL_STEPS = 100;
         private const int MAX_LIFEFORCE_WITHOUT_KIDS = 92;
-        private const int STEPS_TO_REDUCE_REPRODUCING = 29;
-        private const int MIN_LIFEFORCE_WITHOUT_KIDS = 22;
+        private const int MIN_WORM_COUNT = 4;
+        private const int MIN_LIFEFORCE_WITHOUT_KIDS = 20;
         private readonly ConcurrentDictionary<int, int> runStepDictionary = new();
         private readonly ConcurrentDictionary<int, ConcurrentDictionary<IWorm, Position>> wormsTargetPosition = new();
 
@@ -80,8 +80,8 @@ namespace WormsServer.Behaviors
                 newPosition = new Position(moveStep.X + worm.WormPosition.X, moveStep.Y + worm.WormPosition.Y);
             }
 
-            if (currentStep < STEPS_TO_REDUCE_REPRODUCING && worm.Lifeforce > MIN_LIFEFORCE_WITHOUT_KIDS ||
-                currentStep >= STEPS_TO_REDUCE_REPRODUCING && worm.Lifeforce > MAX_LIFEFORCE_WITHOUT_KIDS ||
+            if (world.Worms.Count < MIN_WORM_COUNT && worm.Lifeforce > MIN_LIFEFORCE_WITHOUT_KIDS ||
+                world.Worms.Count >= MIN_WORM_COUNT && worm.Lifeforce > MAX_LIFEFORCE_WITHOUT_KIDS ||
                 worm.Lifeforce / IWorm.LIFEFORCE_TO_REPRODUCE > stepsLeft)
             {
                 if (moveStep.IsNothing())
